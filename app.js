@@ -81,7 +81,7 @@ program
 
 if(!program.id && !program.search) return program.help();
 if(!program.id) {
-  getJSON(URL.search(program.search), function(data) {
+  getJSON(URLS.search(program.search), function(data) {
     if(data.errors) throw new Error("OHMYGODERROR");
     program.id = data[0].id
     start(program.id, program, program.max || 2);
