@@ -1,0 +1,10 @@
+{
+  "name": "SoundcloudDownloader",
+  "version": "1.0.0",
+  "dependencies": {
+    "commander": "*",
+    "mkdirp": "*",
+    "async": "*",
+    "request": "*"
+  }
+}
