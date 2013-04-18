@@ -44,7 +44,11 @@ var funnel = undefined;
 
 var iterate = function(id, out, offset, max) {
   getJSON(URLS.tracks(id, offset), function(data) {
-    if(!data.length) return console.log("Done!") && process.exit(0);
+    if(!data.length) {
+      var done = function() { console.log("Done!") && process.exit(0) };
+      if(max == 0) funnel.drain = done;
+      else done();
+    }
     if(data.errors) throw new Error("OHMYGODERROR");
 
     if(funnel === undefined) {
