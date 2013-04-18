@@ -35,21 +35,27 @@ var download = function(task, callback) {
   var url = task.url, title = task.title, out = task.out;
   console.log("downloading", title);
 
-  var stream = fs.createWriteStream(path.join(out, title+".mp3"));
+  var stream = fs.createWriteStream(path.join(out, (title+".mp3").replace(/(\\|\/)/igm, "-")));
   request(url).pipe(stream);
   stream.on("close", callback);
 }
+
+var funnel = undefined;
 
 var iterate = function(id, out, offset, max) {
   getJSON(URLS.tracks(id, offset), function(data) {
     if(!data.length) return console.log("Done!") && process.exit(0);
     if(data.errors) throw new Error("OHMYGODERROR");
 
-    var funnel = async.queue(download, (!max || max < 1) ? 214783647 : max);
+    if(funnel === undefined) {
+      funnel = async.queue(download, (!max || max < 1) ? Number.MAX_VALUE : max);
 
-    funnel.drain = function() {
-      iterate(id, out, offset+50, max);
-    };
+      if(max > 0) {
+        funnel.drain = function() {
+          iterate(id, out, offset+50, max);
+        };
+      }
+    }
 
     while(data.length) {
       var dat = data.shift();
@@ -59,10 +65,13 @@ var iterate = function(id, out, offset, max) {
         if(e) console.log("Could not download!");
       });
     }
+
+    if(max == 0) iterate(id, out, offset+50, max);
   });
 };
 
 var start = function(id, out, max) {
+  if(typeof max == "undefined") max = 2;
   var dir = out.out || process.cwd();
   if(!out.out) dir+="/"+(out.id.toString());
   out = path.resolve(dir);
@@ -84,6 +93,6 @@ if(!program.id) {
   getJSON(URLS.search(program.search), function(data) {
     if(data.errors) throw new Error("OHMYGODERROR");
     program.id = data[0].id
-    start(program.id, program, program.max || 2);
+    start(program.id, program, program.max);
   });
-} else start(program.id, program, program.max || 2);
+} else start(program.id, program, program.max);
